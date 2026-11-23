@@ -1,1 +1,980 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#401E29">
+<title>LEGEND OF LITTLE BASKETBALL</title>
+<link rel="icon" type="image/png" href="legend_of_little_basketball_icon.png">
+<link rel="apple-touch-icon" href="legend_of_little_basketball_icon.png">
+<link rel="manifest" href="manifest.json">
 
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:12px 8px;background:#F5ECE7;color:#38272A;font-family:Arial,sans-serif;font-size:15px}
+.container{width:100%;max-width:1000px;margin:auto}
+header{background:rgba(64,30,41,.58);color:#F5ECE7;padding:24px 20px;border-radius:10px;margin-bottom:10px}
+header h1{margin:0 0 7px;font-size:24px;letter-spacing:2px}
+header p{margin:0;font-size:14px;opacity:.85}
+section{background:rgba(255,249,245,.58);border:1px solid rgba(226,211,206,.65);border-radius:10px;padding:14px;margin-bottom:10px}
+h2{color:#401E29;margin:0 0 12px;font-size:18px}
+.cast-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cast-card{background:rgba(233,214,208,.58);padding:11px;border-radius:8px}
+.cast-card h3{margin:0 0 7px;color:#401E29;font-size:16px}
+.cast-card p{margin:0;line-height:1.6;font-size:14px}
+.stats{display:flex;gap:8px}
+.stat{flex:1;background:rgba(233,214,208,.58);padding:11px;border-radius:8px;font-size:12px}
+.stat strong{display:block;font-size:27px;color:#401E29;margin-bottom:2px}
+button,select{font:inherit;border:0;border-radius:6px;padding:10px 12px}
+button{background:#A52C3B;color:white;cursor:pointer}
+button.secondary,.seat-button{background:#273544;color:white}
+#actorFilter{width:100%;margin-bottom:10px;border:1px solid #DCCBC6;background:rgba(255,249,245,.72);color:#38272A}
+.table-wrap{width:100%}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{padding:9px 5px;border-bottom:1px solid #DCCBC6;text-align:center;vertical-align:middle}
+th{background:rgba(233,214,208,.72);color:#401E29;font-size:12px}
+td{font-size:13px;overflow-wrap:anywhere}
+.date-main{font-weight:bold;color:#401E29;font-size:14px}
+.event-label{display:block;margin-top:3px;color:#A52C3B;font-size:10px;font-weight:bold;line-height:1.3;white-space:normal}
+.time-main{font-variant-numeric:tabular-nums;white-space:nowrap}
+.watched-check{width:19px;height:19px;accent-color:#A52C3B}
+.seat-button{font-size:11px;padding:7px 8px;white-space:nowrap}
+.empty-message{text-align:center;padding:20px;color:#987B78}
+.schedule-scroll{height:350px;overflow:auto;position:relative;-webkit-overflow-scrolling:touch}
+.schedule-scroll thead th{position:sticky;top:0;z-index:2}
+
+/* MY ACTOR COUNT */
+.actor-count-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.actor-count-card{background:rgba(233,214,208,.58);padding:11px;border-radius:8px}
+.actor-count-card h3{margin:0 0 8px;color:#401E29;font-size:14px}
+.actor-count-person{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:5px 0;border-bottom:1px solid #DCCBC6;font-size:13px}
+.actor-count-person:last-child{border-bottom:0}
+.actor-count-number{color:#401E29;font-weight:bold;white-space:nowrap}
+
+/* MY SEATS */
+.seat-record-list{display:grid;gap:18px}
+.seat-record{padding:12px 0 16px;border-bottom:1px solid #DCCBC6}
+.seat-record:last-child{border-bottom:0}
+.seat-record-date{font-weight:bold;color:#401E29;font-size:14px}
+.seat-record-cast{font-size:12px;color:#987B78;margin-top:4px}
+.no-seats{color:#987B78;font-size:13px;padding:8px 2px}
+.mini-stage{margin:8px auto 12px;padding:5px;max-width:260px;text-align:center;color:white;background:#273544;border-radius:4px;font-size:10px;letter-spacing:3px}
+.mini-map-scroll,.seat-map-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mini-seat-map{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:max-content;padding:5px}
+.mini-floor-title{text-align:center;font-size:10px;color:#987B78;margin:8px 0 4px}
+.mini-seat-row{display:flex;align-items:center;justify-content:center;gap:2px;min-height:14px;margin:2px 0}
+.mini-row-label{width:12px;flex-shrink:0;text-align:center;color:#987B78;font-size:8px}
+.mini-seat{width:11px;height:13px;min-width:11px;padding:0;margin:0;border:1px solid #D4C4C0;border-radius:2px;background:#FFF9F6;color:#401E29;font-size:8px;line-height:11px;flex-shrink:0}
+.mini-seat.selected{background:#A52C3B;border-color:#A52C3B;color:white;font-weight:bold}
+.mini-seat-gap{width:8px;height:13px;flex-shrink:0}
+.mini-legend{text-align:center;font-size:10px;color:#987B78;margin-top:8px}
+.mini-legend-mark{display:inline-block;width:10px;height:10px;background:#A52C3B;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+/* 좌석 선택 창 */
+.seat-modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(22,17,25,.75);padding:8px;overflow-y:auto}
+.seat-modal.open{display:flex;justify-content:center;align-items:flex-start}
+.seat-window{width:100%;max-width:1000px;margin:8px auto;padding:16px;background:rgba(255,249,245,.95);border-radius:10px}
+.seat-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.seat-top h2{margin-bottom:5px}
+#seatPerformance{font-size:13px;color:#987B78;margin:0}
+.stage{margin:14px auto;padding:10px;max-width:400px;text-align:center;color:white;background:#273544;border-radius:5px;letter-spacing:4px}
+.seat-legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:13px;font-size:12px}
+.legend-square{display:inline-block;width:15px;height:15px;border:1px solid #D4C4C0;border-radius:3px;vertical-align:middle;margin-right:4px;background:#FFF9F6}
+.legend-square.selected{background:#A52C3B}
+.floor-tabs{display:flex;justify-content:center;gap:7px;margin:12px 0}
+.floor-tab{background:#E9D6D0;color:#401E29;padding:8px 18px;font-size:12px}
+.floor-tab.active{background:#273544;color:white}
+.floor-panel{display:none}
+.floor-panel.active{display:block}
+.seat-map{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:max-content;padding:6px 10px}
+.seat-row{display:flex;align-items:center;justify-content:center;gap:2px;min-height:25px;margin:2px 0}
+.seat-block{display:flex;align-items:center;justify-content:center;gap:2px;flex-shrink:0}
+.seat-block.left-block,.seat-block.right-block{width:94px}
+.seat-block.center-block{width:262px}
+.seat-block.left-block{justify-content:flex-end}
+.seat-block.right-block{justify-content:flex-start}
+.row-label{width:20px;flex-shrink:0;text-align:center;color:#987B78;font-size:10px}
+.seat{width:22px;height:23px;min-width:22px;padding:0;margin:0;border:1px solid #CDBBB7;border-radius:4px;background:#FFF9F5;color:#401E29;font-size:10px;line-height:21px;flex-shrink:0}
+.seat.selected{background:#A52C3B;border-color:#A52C3B;color:white;font-weight:bold}
+.seat-gap{width:8px;height:23px;flex-shrink:0}
+.seat-bottom{margin-top:16px;padding-top:13px;border-top:1px solid #DCCBC6}
+#selectedSeatText{color:#401E29;font-weight:bold;font-size:13px;line-height:1.8;overflow-wrap:anywhere;margin:8px 0 12px}
+.seat-bottom button{margin:3px}
+
+/* MY NOTES */
+.notes-intro{color:#987B78;font-size:12px;line-height:1.6;margin:0 0 14px}
+.notes-editor{background:rgba(245,236,231,.65);border:1px solid #DCCBC6;border-radius:8px;padding:12px;margin-bottom:16px}
+.notes-editor label{display:block;color:#401E29;font-size:12px;font-weight:bold;margin:12px 0 6px}
+.notes-editor label:first-child{margin-top:0}
+.notes-editor select,.notes-editor textarea{width:100%;border:1px solid #DCCBC6;border-radius:6px;background:rgba(255,249,245,.88);color:#38272A;padding:10px;font:inherit;font-size:13px}
+.notes-editor textarea{resize:vertical;line-height:1.7;min-height:75px}
+.notes-editor textarea:focus,.notes-editor select:focus{outline:2px solid #A52C3B;outline-offset:1px}
+.notes-save{width:100%;margin-top:12px;padding:10px;background:#401E29;color:white}
+.notes-list{display:grid;gap:10px}
+.note-item{background:rgba(255,249,245,.7);border:1px solid #DCCBC6;border-radius:8px;padding:12px}
+.note-item h3{font-size:14px;color:#401E29;margin:0 0 6px}
+.note-item p{font-size:13px;line-height:1.7;margin:6px 0;overflow-wrap:anywhere}
+.note-stars{color:#C69A42;font-size:16px}
+.note-empty{color:#987B78;text-align:center;padding:18px 5px;font-size:12px;line-height:1.7}
+.note-item button{font-size:11px;padding:7px 12px;margin-top:8px}
+.rating-stars{display:flex;justify-content:center;gap:0;white-space:nowrap;margin-top:4px}
+.rating-star{border:0;background:transparent;color:#C9B9A8;font-size:20px;line-height:1;padding:2px 0;cursor:pointer}
+.rating-star.selected{color:#C69A42}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px auto;max-width:1000px}
+.actions button{font-size:12px}
+
+@media(max-width:600px){
+ body{padding:4px 3px}
+ header{padding:16px 12px;margin-bottom:7px;border-radius:8px}
+ header h1{font-size:18px;letter-spacing:1.2px}
+ header p{font-size:11px}
+ section{padding:9px 7px;margin-bottom:7px;border-radius:8px}
+ h2{font-size:15px;margin:0 0 9px}
+ .cast-grid{gap:4px}
+ .cast-card{padding:8px 5px}
+ .cast-card h3{font-size:12px;margin-bottom:5px}
+ .cast-card p{font-size:10px;line-height:1.6;letter-spacing:-.5px}
+ .stats{gap:5px}
+ .stat{padding:9px 7px;font-size:12px}
+ .stat strong{font-size:23px}
+ th{font-size:9px;padding:6px 1px;white-space:nowrap}
+ td{font-size:10px;padding:7px 1px}
+ .date-main,.time-main{font-size:10px;white-space:nowrap}
+ .watched-check{width:14px;height:14px}
+ .seat-button{font-size:8px;padding:5px 3px}
+ .actor-count-list{gap:4px}
+ .actor-count-card{padding:8px 5px}
+ .actor-count-card h3{font-size:11px;margin-bottom:5px}
+ .actor-count-person{font-size:10px;padding:6px 0}
+ .actor-count-number{font-size:10px}
+ .seat-record{padding:10px 0 13px}
+ .seat-record-date{font-size:12px}
+ .seat-record-cast{font-size:10px}
+ .mini-seat-map{gap:2px}
+ .mini-seat-row{gap:1px;min-height:13px;margin:2px 0}
+ .mini-row-label{width:10px;font-size:7px}
+ .mini-seat{width:10px;min-width:10px;height:12px;font-size:7px;line-height:10px}
+ .mini-seat-gap{width:6px;height:12px}
+ .mini-stage{font-size:9px;margin:7px auto 9px}
+ .mini-legend{font-size:9px}
+ .seat-modal{padding:3px}
+ .seat-window{padding:10px 3px;margin:3px auto;border-radius:8px}
+ .seat-top{padding:0 5px}
+ .seat-top h2{font-size:15px}
+ #seatPerformance{font-size:10px}
+ .seat-top button{font-size:10px;padding:6px 9px}
+ .stage{margin:9px auto;padding:7px;font-size:11px;max-width:75%}
+ .seat-legend{gap:7px;font-size:10px;margin-bottom:8px}
+ .legend-square{width:12px;height:12px}
+ .floor-tab{font-size:11px;padding:7px 15px}
+ .seat-map{padding:5px 8px}
+ .seat-row{gap:1px;min-height:16px;margin:2px 0}
+ .row-label{width:11px;font-size:8px}
+ .seat{width:12px;min-width:12px;height:15px;font-size:7px;line-height:13px;border-radius:2px;padding:0}
+ .seat-gap{width:5px;height:15px}
+ .seat-block.left-block,.seat-block.right-block{width:52px}
+ .seat-block.center-block{width:150px}
+ .seat-bottom{margin-top:10px;padding:9px 5px 0}
+ .seat-bottom p{font-size:12px}
+ #selectedSeatText{font-size:11px}
+ .seat-bottom button{font-size:10px;padding:7px 9px}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+ <h1>LEGEND OF LITTLE BASKETBALL</h1>
+ <p>전설의 리틀 농구단</p>
+</header>
+
+<section>
+ <h2>CAST MEMBERS</h2>
+ <div class="cast-grid">
+  <div class="cast-card"><h3>종우</h3><p>김대현 · 박재윤 · 안재영</p></div>
+  <div class="cast-card"><h3>수현</h3><p>송유택 · 김현진 · 조성태 · 임진섭</p></div>
+  <div class="cast-card"><h3>상태</h3><p>신창주 · 박대원 · 김승용 · 김효성</p></div>
+  <div class="cast-card"><h3>승우</h3><p>조현우 · 신윤철 · 구준모 · 곽민수</p></div>
+  <div class="cast-card"><h3>다인</h3><p>김민강 · 권정수 · 장두환</p></div>
+  <div class="cast-card"><h3>지훈</h3><p>김현기 · 김승현 · 정찬호</p></div>
+ </div>
+</section>
+
+<section>
+ <h2>MY RECORD</h2>
+ <div class="stats">
+  <div class="stat"><strong id="totalCount">0</strong>전체 공연 기록</div>
+  <div class="stat"><strong id="watchedCount">0</strong>나의 관극 횟수</div>
+ </div>
+</section>
+
+<section>
+ <h2>MY ACTOR COUNT</h2>
+ <div id="actorCountList" class="actor-count-list"></div>
+</section>
+
+<section>
+ <h2>PERFORMANCE SCHEDULE</h2>
+ <select id="actorFilter" onchange="render()"><option value="">전체 배우 보기</option></select>
+ <div class="table-wrap">
+  <div class="schedule-scroll">
+   <table>
+    <thead>
+     <tr>
+      <th>날짜</th><th>시간</th>
+      <th>종우</th><th>수현</th><th>상태</th>
+      <th>승우</th><th>다인</th><th>지훈</th>
+      <th>관극</th><th>좌석</th>
+     </tr>
+    </thead>
+    <tbody id="scheduleBody"></tbody>
+   </table>
+  </div>
+ </div>
+</section>
+
+<section>
+ <h2>MY SEATS</h2>
+ <div id="seatRecordList" class="seat-record-list"></div>
+</section>
+
+<section>
+ <h2>MY NOTES</h2>
+ <p class="notes-intro">공연이 끝난 뒤, 오래 기억하고 싶은 순간들을 기록하는 나만의 공간</p>
+ <div class="notes-editor">
+  <label for="notePerformance">관람한 공연</label>
+  <select id="notePerformance" onchange="loadNoteForPerformance()">
+   <option value="">관극한 공연을 선택해 주세요.</option>
+  </select>
+
+  <label>오늘의 별점</label>
+  <div id="noteRating" class="rating-stars">
+   <button type="button" class="rating-star" onclick="selectNoteRating(1)">☆</button>
+   <button type="button" class="rating-star" onclick="selectNoteRating(2)">☆</button>
+   <button type="button" class="rating-star" onclick="selectNoteRating(3)">☆</button>
+   <button type="button" class="rating-star" onclick="selectNoteRating(4)">☆</button>
+   <button type="button" class="rating-star" onclick="selectNoteRating(5)">☆</button>
+  </div>
+
+  <label for="noteScene">기억하고 싶은 장면</label>
+  <textarea id="noteScene" placeholder="오늘 가장 기억에 남았던 장면은?"></textarea>
+  <label for="noteMemo">오늘의 감상</label>
+  <textarea id="noteMemo" rows="5" placeholder="배우의 표정, 대사, 무대, 감정 등 자유롭게 기록해 보세요."></textarea>
+  <button class="notes-save" onclick="saveNote()">감상 기록 저장</button>
+ </div>
+ <div id="noteList" class="notes-list"></div>
+</section>
+</div>
+
+<div class="seat-modal" id="seatModal">
+ <div class="seat-window">
+  <div class="seat-top">
+   <div><h2>MY SEAT</h2><p id="seatPerformance"></p></div>
+   <button class="secondary" onclick="closeSeatMap()">닫기</button>
+  </div>
+  <div class="stage">STAGE</div>
+  <div class="seat-legend">
+   <span><span class="legend-square"></span>선택 가능</span>
+   <span><span class="legend-square selected"></span>내 좌석</span>
+  </div>
+  <div class="floor-tabs">
+   <button class="floor-tab active" id="floor1Tab" onclick="showFloor(1)">1층</button>
+   <button class="floor-tab" id="floor2Tab" onclick="showFloor(2)">2층</button>
+  </div>
+  <div class="floor-panel active" id="floor1Panel">
+   <div class="seat-map-scroll"><div class="seat-map" id="floor1Seats"></div></div>
+  </div>
+  <div class="floor-panel" id="floor2Panel">
+   <div class="seat-map-scroll"><div class="seat-map" id="floor2Seats"></div></div>
+  </div>
+  <div class="seat-bottom">
+   <p>선택한 좌석</p>
+   <div id="selectedSeatText">선택한 좌석이 없습니다.</div>
+   <button class="secondary" onclick="clearSeats()">선택 초기화</button>
+  </div>
+ </div>
+</div>
+
+<div class="actions">
+ <button class="secondary" onclick="document.getElementById('importFile').click()">기록 불러오기</button>
+ <input id="importFile" type="file" accept=".json" hidden onchange="importData(event)">
+ <button class="secondary" onclick="exportData()">기록 저장</button>
+</div>
+
+<script>
+const roles={
+ 종우:["김대현","박재윤","안재영"],
+ 수현:["송유택","김현진","조성태","임진섭"],
+ 상태:["신창주","박대원","김승용","김효성"],
+ 승우:["조현우","신윤철","구준모","곽민수"],
+ 다인:["김민강","권정수","장두환"],
+ 지훈:["김현기","김승현","정찬호"]
+};
+const roleKeys=["종우","수현","상태","승우","다인","지훈"];
+
+let records=[];
+try{
+ records=JSON.parse(localStorage.getItem("llb_records")||"[]");
+ if(!Array.isArray(records))records=[];
+}catch(e){records=[];}
+
+let notes=[];
+try{
+ notes=JSON.parse(localStorage.getItem("llb_notes")||"[]");
+ if(!Array.isArray(notes))notes=[];
+}catch(e){notes=[];}
+
+let ratings={};
+try{ratings=JSON.parse(localStorage.getItem("llb_ratings")||"{}");}
+catch(e){ratings={};}
+
+/* 날짜|시간|종우|수현|상태|승우|다인|지훈 */
+const scheduleText=`
+2026-03-10|20:00|김대현|임진섭|신창주|신윤철|권정수|정찬호
+2026-03-11|20:00|박재윤|김현진|김승용|곽민수|장두환|김승현
+2026-03-12|20:00|안재영|송유택|박대원|조현우|김민강|김현기
+2026-03-13|20:00|김대현|조성태|김효성|신윤철|권정수|정찬호
+2026-03-14|15:00|박재윤|조성태|신창주|조현우|김민강|김승현
+2026-03-14|19:00|박재윤|임진섭|김효성|곽민수|장두환|김현기
+2026-03-15|14:00|김대현|송유택|김승용|구준모|권정수|정찬호
+2026-03-15|18:00|안재영|김현진|박대원|구준모|김민강|김승현
+2026-03-17|20:00|안재영|임진섭|김승용|조현우|권정수|정찬호
+2026-03-18|20:00|김대현|김현진|박대원|곽민수|김민강|김현기
+2026-03-19|20:00|박재윤|조성태|신창주|신윤철|장두환|김승현
+2026-03-20|20:00|김대현|송유택|김효성|곽민수|장두환|김현기
+2026-03-21|15:00|안재영|김현진|김승용|조현우|김민강|김승현
+2026-03-21|19:00|박재윤|조성태|김승용|신윤철|김민강|김승현
+2026-03-22|14:00|김대현|임진섭|신창주|구준모|장두환|김현기
+2026-03-22|18:00|박재윤|조성태|김효성|구준모|권정수|김현기
+2026-03-24|20:00|김대현|김현진|신창주|신윤철|김민강|정찬호
+2026-03-25|20:00|안재영|조성태|김승용|곽민수|권정수|정찬호
+2026-03-26|20:00|박재윤|김현진|김승용|조현우|장두환|김현기
+2026-03-27|20:00|안재영|송유택|박대원|곽민수|장두환|김승현
+2026-03-28|15:00|박재윤|임진섭|김효성|조현우|김민강|김현기
+2026-03-28|19:00|박재윤|김현진|신창주|조현우|장두환|김현기
+2026-03-29|14:00|김대현|송유택|김승용|신윤철|권정수|김승현
+2026-03-29|18:00|안재영|조성태|김승용|신윤철|권정수|김승현
+2026-03-31|20:00|김대현|조성태|박대원|곽민수|김민강|김현기
+2026-04-01|20:00|안재영|김현진|김승용|신윤철|장두환|정찬호
+2026-04-02|20:00|박재윤|김현진|김승용|조현우|권정수|김승현
+2026-04-03|20:00|안재영|임진섭|김효성|곽민수|김민강|김승현
+2026-04-04|15:00|박재윤|송유택|김승용|신윤철|장두환|정찬호
+2026-04-04|19:00|김대현|임진섭|김승용|신윤철|장두환|김현기
+2026-04-05|14:00|안재영|조성태|김효성|조현우|권정수|정찬호
+2026-04-05|18:00|김대현|조성태|신창주|곽민수|김민강|정찬호
+2026-04-07|20:00|안재영|김현진|신창주|조현우|권정수|김현기
+2026-04-08|20:00|김대현|임진섭|박대원|곽민수|김민강|김승현
+2026-04-09|20:00|안재영|조성태|김승용|신윤철|장두환|정찬호
+2026-04-10|20:00|박재윤|송유택|김승용|조현우|권정수|김현기
+2026-04-11|15:00|김대현|조성태|김효성|신윤철|김민강|김승현
+2026-04-11|19:00|박재윤|임진섭|김효성|조현우|김민강|김현기
+2026-04-12|14:00|김대현|조성태|신창주|곽민수|권정수|정찬호
+2026-04-12|18:00|안재영|김현진|신창주|곽민수|장두환|정찬호
+2026-04-14|20:00|김대현|조성태|박대원|신윤철|장두환|김현기
+2026-04-15|20:00|안재영|김현진|김효성|조현우|김민강|정찬호
+2026-04-16|20:00|박재윤|임진섭|박대원|곽민수|권정수|김승현
+2026-04-17|20:00|박재윤|김현진|박대원|조현우|장두환|정찬호
+2026-04-18|15:00|안재영|조성태|김효성|신윤철|김민강|김승현
+2026-04-18|19:00|안재영|송유택|김효성|신윤철|김민강|김승현
+2026-04-19|14:00|김대현|임진섭|신창주|곽민수|권정수|정찬호
+2026-04-19|18:00|김대현|김현진|신창주|조현우|권정수|김현기
+2026-04-21|20:00|안재영|조성태|박대원|곽민수|김민강|정찬호
+2026-04-22|20:00|박재윤|김현진|신창주|신윤철|장두환|정찬호
+2026-04-23|20:00|김대현|조성태|박대원|조현우|권정수|정찬호
+2026-04-24|20:00|안재영|송유택|박대원|곽민수|장두환|김승현
+2026-04-25|15:00|박재윤|김현진|김효성|조현우|권정수|김현기
+2026-04-25|19:00|박재윤|임진섭|김효성|곽민수|김민강|김현기
+2026-04-26|14:00|안재영|조성태|신창주|신윤철|장두환|김승현
+2026-04-26|18:00|김대현|송유택|신창주|신윤철|장두환|김승현
+2026-04-29|20:00|박재윤|김현진|신창주|신윤철|권정수|김현기
+2026-04-30|20:00|김대현|조성태|박대원|곽민수|김민강|김승현
+2026-05-01|14:00|안재영|임진섭|김효성|조현우|장두환|정찬호
+2026-05-01|18:00|박재윤|김현진|박대원|조현우|권정수|김승현
+2026-05-02|15:00|김대현|송유택|신창주|곽민수|김민강|김현기
+2026-05-02|19:00|안재영|조성태|신창주|신윤철|장두환|김현기
+2026-05-03|14:00|김대현|김현진|김효성|조현우|권정수|정찬호
+2026-05-03|18:00|박재윤|임진섭|김효성|조현우|김민강|김현기
+2026-05-05|14:00|김대현|임진섭|신창주|곽민수|김민강|정찬호
+2026-05-05|18:00|박재윤|김현진|신창주|곽민수|김민강|정찬호
+2026-05-06|19:00|박재윤|조성태|박대원|조현우|장두환|김현기
+2026-05-07|20:00|안재영|김현진|신창주|신윤철|장두환|정찬호
+2026-05-08|20:00|김대현|조성태|신창주|조현우|김민강|정찬호
+2026-05-09|15:00|박재윤|임진섭|김효성|신윤철|권정수|김승현
+2026-05-09|19:00|안재영|송유택|김효성|신윤철|권정수|김승현
+2026-05-10|14:00|김대현|조성태|김효성|조현우|장두환|김현기
+2026-05-10|18:00|김대현|조성태|김효성|조현우|권정수|정찬호
+2026-05-12|20:00|안재영|조성태|신창주|신윤철|권정수|김현기
+2026-05-13|20:00|박재윤|김현진|박대원|조현우|김민강|김승현
+2026-05-14|20:00|안재영|조성태|신창주|곽민수|권정수|김승현
+2026-05-15|20:00|김대현|임진섭|박대원|조현우|장두환|김승현
+2026-05-16|15:00|안재영|임진섭|김효성|곽민수|권정수|김승현
+2026-05-16|19:00|안재영|김현진|박대원|신윤철|김민강|김현기
+2026-05-17|14:00|김대현|조성태|신창주|곽민수|장두환|김승현
+2026-05-17|18:00|박재윤|송유택|신창주|곽민수|장두환|김승현
+2026-05-19|20:00|안재영|김현진|박대원|신윤철|권정수|정찬호
+2026-05-20|20:00|박재윤|조성태|신창주|곽민수|장두환|김승현
+2026-05-21|20:00|김대현|송유택|박대원|신윤철|김민강|김현기
+2026-05-22|20:00|안재영|임진섭|박대원|조현우|권정수|정찬호
+2026-05-23|15:00|박재윤|조성태|김효성|곽민수|장두환|김현기
+2026-05-23|19:00|박재윤|김현진|신창주|곽민수|김민강|김현기
+2026-05-24|14:00|김대현|임진섭|신창주|조현우|장두환|정찬호
+2026-05-24|18:00|안재영|조성태|김효성|조현우|장두환|정찬호
+2026-05-25|14:00|박재윤|송유택|신창주|신윤철|권정수|김현기
+2026-05-25|18:00|김대현|김현진|박대원|곽민수|김민강|김승현
+`;
+
+const newSchedule=scheduleText.trim().split("\n").map(line=>{
+ const [date,time,종우,수현,상태,승우,다인,지훈]=line.trim().split("|");
+ return {date,time,종우,수현,상태,승우,다인,지훈,watched:false,seat:"",seatSelections:[]};
+});
+
+/* 10주년 콘서트 */
+const concert={
+ date:"2026-04-27",time:"19:30",eventName:'전설의 리틀 농구단 10주년 콘서트 - "이 코트 안의 우리"',
+ isEvent:true,watched:false,seat:"",seatSelections:[]
+};
+
+function recordKey(r){return `${r.date}_${r.time}`;}
+
+newSchedule.forEach(item=>{
+ const existing=records.find(r=>r.date===item.date&&r.time===item.time);
+ if(existing){
+  roleKeys.forEach(key=>{if(!existing[key])existing[key]=item[key];});
+ }else records.push(item);
+});
+
+const existingConcert=records.find(r=>r.date===concert.date&&r.time===concert.time&&r.isEvent);
+if(!existingConcert)records.push(concert);
+records.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+records.forEach(r=>{if(!Array.isArray(r.seatSelections))r.seatSelections=[];});
+
+function save(){
+ localStorage.setItem("llb_records",JSON.stringify(records));
+ updateStats();
+}
+function saveRatings(){localStorage.setItem("llb_ratings",JSON.stringify(ratings));}
+function formatDate(value){
+ if(!value)return "날짜 미정";
+ const p=value.split("-");
+ const d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2]));
+ return `${Number(p[1])}.${Number(p[2])} (${["일","월","화","수","목","금","토"][d.getDay()]})`;
+}
+function ratingKey(r){return `${r.date}_${r.time}`;}
+
+function render(){
+ const body=document.getElementById("scheduleBody");
+ const filter=document.getElementById("actorFilter").value;
+ body.innerHTML="";
+ let shown=0;
+
+ records.forEach((r,i)=>{
+  const actors=roleKeys.map(k=>r[k]);
+  if(filter&&!actors.includes(filter))return;
+  shown++;
+
+  const tr=document.createElement("tr");
+  const date=document.createElement("td");
+  date.innerHTML=`<span class="date-main">${formatDate(r.date)}</span>${r.isEvent?`<span class="event-label">${r.eventName}</span>`:""}`;
+
+  const time=document.createElement("td");
+  time.innerHTML=`<span class="time-main">${r.time||"-"}</span>`;
+
+  const cells=roleKeys.map(key=>{
+   const td=document.createElement("td");
+   td.textContent=r[key]||"-";
+   return td;
+  });
+
+  const watched=document.createElement("td");
+  const check=document.createElement("input");
+  check.type="checkbox";
+  check.className="watched-check";
+  check.checked=!!r.watched;
+  check.setAttribute("aria-label","관극 여부");
+  check.addEventListener("change",()=>{
+   records[i].watched=check.checked;
+   save();
+   renderActorCounts();
+   renderNotes();
+  });
+  watched.appendChild(check);
+
+  const seat=document.createElement("td");
+  const seatButton=document.createElement("button");
+  seatButton.className="seat-button";
+  seatButton.textContent="좌석 선택";
+  seatButton.addEventListener("click",()=>openSeatMap(i));
+  seat.appendChild(seatButton);
+
+  [date,time,...cells,watched,seat].forEach(td=>tr.appendChild(td));
+  body.appendChild(tr);
+ });
+
+ if(!shown){
+  const tr=document.createElement("tr");
+  const td=document.createElement("td");
+  td.colSpan=10;
+  td.className="empty-message";
+  td.textContent="표시할 공연 일정이 없습니다.";
+  tr.appendChild(td);
+  body.appendChild(tr);
+ }
+ updateStats();
+ renderSeatRecords();
+ renderNotes();
+}
+
+function setupFilter(){
+ const select=document.getElementById("actorFilter");
+ const names=[...new Set(roleKeys.flatMap(key=>roles[key]))];
+ select.innerHTML='<option value="">전체 배우 보기</option>'+
+  names.map(name=>`<option value="${name}">${name}</option>`).join("");
+}
+
+function updateStats(){
+ document.getElementById("totalCount").textContent=records.length;
+ document.getElementById("watchedCount").textContent=records.filter(r=>r.watched).length;
+ renderActorCounts();
+}
+
+function renderActorCounts(){
+ const target=document.getElementById("actorCountList");
+ target.innerHTML="";
+ roleKeys.forEach(key=>{
+  const card=document.createElement("div");
+  card.className="actor-count-card";
+  const heading=document.createElement("h3");
+  heading.textContent=key;
+  card.appendChild(heading);
+
+  roles[key].forEach(actor=>{
+   const total=records.filter(r=>!r.isEvent&&r[key]===actor).length;
+   const count=records.filter(r=>r.watched===true&&r[key]===actor&&!r.isEvent).length;
+   const person=document.createElement("div");
+   person.className="actor-count-person";
+   const name=document.createElement("span");
+   name.textContent=actor;
+   const number=document.createElement("span");
+   number.className="actor-count-number";
+   number.textContent=`${count}/${total}`;
+   person.append(name,number);
+   card.appendChild(person);
+  });
+  target.appendChild(card);
+ });
+}
+
+/* 시데레우스 좌석 배치 */
+const floor1Rows=[
+ {row:"A",blocks:[4,11,4]},
+ {row:"B",blocks:[4,11,4]},
+ {row:"C",blocks:[4,10,4]},
+ {row:"D",blocks:[4,11,4]},
+ {row:"E",blocks:[4,10,4]},
+ {row:"F",blocks:[4,11,4]},
+ {row:"G",blocks:[4,10,4]},
+ {row:"H",blocks:[4,11,4]},
+ {row:"I",blocks:[4,10,4]},
+ {row:"J",blocks:[4,11,4]},
+ {row:"K",blocks:[4,10,4]},
+ {row:"L",blocks:[2,11,4]},
+ {row:"M",blocks:[2,2,0]},
+ {row:"N",blocks:[2,2,0]},
+ {row:"O",blocks:[5,0,0]}
+];
+const floor2Rows=[
+ {row:"P",blocks:[16],offset:0},
+ {row:"Q",blocks:[16],offset:7},
+ {row:"R",blocks:[14],offset:0},
+ {row:"S",blocks:[14],offset:7},
+ {row:"T",blocks:[14],offset:0}
+];
+
+let currentRecordIndex=null;
+let temporarySeats=[];
+
+function seatId(floor,row,number){return `${floor}-${row}-${number}`;}
+function seatDescription(id){
+ const parts=id.split("-");
+ if(parts.length===3&&["1","2"].includes(parts[0])){
+  return `${parts[0]}층 ${parts[1]}열 ${parts[2]}번`;
+ }
+ return `기존 좌석 기록 (${id})`;
+}
+function makeSeat(floor,row,number){
+ const id=seatId(floor,row,number);
+ const selected=temporarySeats.includes(id);
+ const button=document.createElement("button");
+ button.type="button";
+ button.className="seat"+(selected?" selected":"");
+ button.textContent=selected?"✓":number;
+ button.title=seatDescription(id);
+ button.addEventListener("click",()=>toggleSeat(id));
+ return button;
+}
+function addSeatGap(row){
+ const gap=document.createElement("span");
+ gap.className="seat-gap";
+ row.appendChild(gap);
+}
+function makeSeatRows(floor,rows,targetId){
+ const target=document.getElementById(targetId);
+ target.innerHTML="";
+
+ rows.forEach(item=>{
+  const row=document.createElement("div");
+  row.className="seat-row";
+  if(item.offset)row.style.transform=`translateX(${item.offset}px)`;
+
+  const label=document.createElement("span");
+  label.className="row-label";
+  label.textContent=item.row;
+  row.appendChild(label);
+
+  let number=1;
+
+  if(item.blocks.length===3){
+   const blockNames=["left-block","center-block","right-block"];
+   item.blocks.forEach((count,blockIndex)=>{
+    if(blockIndex>0)addSeatGap(row);
+    const block=document.createElement("div");
+    block.className="seat-block "+blockNames[blockIndex];
+
+    for(let i=0;i<count;i++){
+     block.appendChild(makeSeat(floor,item.row,number));
+     number++;
+    }
+    row.appendChild(block);
+   });
+  }else{
+   item.blocks.forEach((count,blockIndex)=>{
+    if(count===0)return;
+    if(blockIndex>0)addSeatGap(row);
+    const block=document.createElement("div");
+    block.className="seat-block center-block";
+    for(let i=0;i<count;i++){
+     block.appendChild(makeSeat(floor,item.row,number));
+     number++;
+    }
+    row.appendChild(block);
+   });
+  }
+  target.appendChild(row);
+ });
+}
+
+function renderSeatMap(){
+ makeSeatRows(1,floor1Rows,"floor1Seats");
+ makeSeatRows(2,floor2Rows,"floor2Seats");
+}
+function showFloor(floor){
+ document.getElementById("floor1Panel").classList.toggle("active",floor===1);
+ document.getElementById("floor2Panel").classList.toggle("active",floor===2);
+ document.getElementById("floor1Tab").classList.toggle("active",floor===1);
+ document.getElementById("floor2Tab").classList.toggle("active",floor===2);
+}
+function openSeatMap(index){
+ currentRecordIndex=index;
+ temporarySeats=[...(records[index].seatSelections||[])];
+ const r=records[index];
+ document.getElementById("seatPerformance").textContent=
+  `${formatDate(r.date)} ${r.time||""}${r.isEvent?" · 10주년 콘서트":""}`;
+ document.getElementById("seatModal").classList.add("open");
+ showFloor(1);
+ renderSeatMap();
+ updateSelectedSeatText();
+}
+function toggleSeat(id){
+ temporarySeats=temporarySeats.includes(id)
+  ?temporarySeats.filter(x=>x!==id)
+  :[...temporarySeats,id];
+ saveCurrentSeats();
+ renderSeatMap();
+ updateSelectedSeatText();
+ renderSeatRecords();
+}
+function saveCurrentSeats(){
+ if(currentRecordIndex===null)return;
+ records[currentRecordIndex].seatSelections=[...temporarySeats];
+ records[currentRecordIndex].seat=temporarySeats.map(seatDescription).join(", ");
+ save();
+}
+function updateSelectedSeatText(){
+ const target=document.getElementById("selectedSeatText");
+ target.textContent=temporarySeats.length
+  ?temporarySeats.map(seatDescription).join(" / ")
+  :"선택한 좌석이 없습니다.";
+}
+function clearSeats(){
+ temporarySeats=[];
+ saveCurrentSeats();
+ renderSeatMap();
+ updateSelectedSeatText();
+ renderSeatRecords();
+}
+function closeSeatMap(){
+ document.getElementById("seatModal").classList.remove("open");
+ currentRecordIndex=null;
+}
+
+/* MY SEATS 미니 좌석표 */
+function renderSeatRecords(){
+ const target=document.getElementById("seatRecordList");
+ target.innerHTML="";
+
+ const seatCounts={};
+ records.forEach(r=>{
+  (r.seatSelections||[]).forEach(id=>{
+   seatCounts[id]=(seatCounts[id]||0)+1;
+  });
+ });
+
+ const selectedRecords=records.filter(r=>(r.seatSelections||[]).length>0);
+ if(!selectedRecords.length){
+  const empty=document.createElement("div");
+  empty.className="no-seats";
+  empty.textContent="아직 선택한 좌석이 없습니다. 공연 일정에서 좌석을 선택해 보세요.";
+  target.appendChild(empty);
+  return;
+ }
+
+ const stage=document.createElement("div");
+ stage.className="mini-stage";
+ stage.textContent="STAGE";
+ target.appendChild(stage);
+
+ [1,2].forEach(floor=>{
+  const heading=document.createElement("div");
+  heading.className="mini-floor-title";
+  heading.textContent=`${floor}층`;
+  target.appendChild(heading);
+
+  const mapScroll=document.createElement("div");
+  mapScroll.className="mini-map-scroll";
+  const map=document.createElement("div");
+  map.className="mini-seat-map";
+
+  const rows=floor===1?floor1Rows:floor2Rows;
+  rows.forEach(item=>{
+   const row=document.createElement("div");
+   row.className="mini-seat-row";
+   if(item.offset)row.style.transform=`translateX(${item.offset}px)`;
+
+   const label=document.createElement("span");
+   label.className="mini-row-label";
+   label.textContent=item.row;
+   row.appendChild(label);
+
+   let number=1;
+   item.blocks.forEach((count,blockIndex)=>{
+    if(item.blocks.length===3&&blockIndex>0){
+     const gap=document.createElement("span");
+     gap.className="mini-seat-gap";
+     row.appendChild(gap);
+    }
+    for(let i=0;i<count;i++){
+     const id=seatId(floor,item.row,number);
+     const countHere=seatCounts[id]||0;
+     const seat=document.createElement("div");
+     seat.className="mini-seat"+(countHere?" selected":"");
+     seat.textContent=countHere?`✓${countHere}`:"";
+     seat.title=seatDescription(id)+(countHere?` · ${countHere}회`:"");
+     row.appendChild(seat);
+     number++;
+    }
+   });
+   map.appendChild(row);
+  });
+  mapScroll.appendChild(map);
+  target.appendChild(mapScroll);
+ });
+
+ const legend=document.createElement("div");
+ legend.className="mini-legend";
+ legend.innerHTML='<span class="mini-legend-mark"></span>체크 표시 옆 숫자는 해당 좌석에 앉은 횟수';
+ target.appendChild(legend);
+
+ selectedRecords.forEach(r=>{
+  const item=document.createElement("div");
+  item.className="seat-record";
+  const date=document.createElement("div");
+  date.className="seat-record-date";
+  date.textContent=`${formatDate(r.date)} ${r.time||""}`;
+  const cast=document.createElement("div");
+  cast.className="seat-record-cast";
+  cast.textContent=roleKeys.map(k=>`${k} ${r[k]||"-"}`).join(" · ");
+  const seats=document.createElement("div");
+  seats.className="seat-record-cast";
+  seats.textContent=r.seatSelections.map(seatDescription).join(" / ");
+  item.append(date,cast,seats);
+  target.appendChild(item);
+ });
+}
+
+/* 별점 및 감상 기록 */
+let noteRating=0;
+function selectNoteRating(score){
+ noteRating=score;
+ document.querySelectorAll("#noteRating .rating-star").forEach((star,index)=>{
+  star.textContent=index<score?"★":"☆";
+  star.classList.toggle("selected",index<score);
+ });
+}
+function loadNoteForPerformance(){
+ const index=document.getElementById("notePerformance").value;
+ const scene=document.getElementById("noteScene");
+ const memo=document.getElementById("noteMemo");
+ if(index===""){
+  noteRating=0;scene.value="";memo.value="";
+ }else{
+  const r=records[index];
+  const key=ratingKey(r);
+  noteRating=ratings[key]||0;
+  const note=notes.find(n=>n.recordKey===key);
+  scene.value=note?note.scene:"";
+  memo.value=note?note.memo:"";
+ }
+ selectNoteRating(noteRating);
+}
+function saveNote(){
+ const index=document.getElementById("notePerformance").value;
+ if(index==="")return;
+ const r=records[index];
+ const key=ratingKey(r);
+ if(noteRating>0)ratings[key]=noteRating;
+ else delete ratings[key];
+ saveRatings();
+
+ const scene=document.getElementById("noteScene").value;
+ const memo=document.getElementById("noteMemo").value;
+ const existing=notes.findIndex(n=>n.recordKey===key);
+ if(scene.trim()||memo.trim()){
+  const note={recordKey:key,scene,memo};
+  if(existing>=0)notes[existing]=note;
+  else notes.push(note);
+ }else if(existing>=0){
+  notes.splice(existing,1);
+ }
+ localStorage.setItem("llb_notes",JSON.stringify(notes));
+ renderNotes();
+}
+function renderNotes(){
+ const select=document.getElementById("notePerformance");
+ const list=document.getElementById("noteList");
+ if(!select||!list)return;
+
+ const previous=select.value;
+ select.innerHTML='<option value="">관극한 공연을 선택해 주세요.</option>';
+ records.forEach((r,index)=>{
+  if(!r.watched)return;
+  const option=document.createElement("option");
+  option.value=index;
+  option.textContent=`${formatDate(r.date)} ${r.time||""} · ${roleKeys.map(k=>`${k} ${r[k]||"-"}`).join(" / ")}`;
+  select.appendChild(option);
+ });
+ if(previous!=="")select.value=previous;
+
+ const saved=records.filter(r=>{
+  const key=ratingKey(r);
+  return notes.some(n=>n.recordKey===key)||ratings[key];
+ });
+ if(!saved.length){
+  list.innerHTML='<div class="note-empty">아직 작성한 감상 기록이 없습니다.<br>첫 번째 관극 일기를 남겨보세요.</div>';
+  return;
+ }
+ list.innerHTML="";
+ saved.forEach(r=>{
+  const key=ratingKey(r);
+  const note=notes.find(n=>n.recordKey===key);
+  const score=ratings[key]||0;
+  const item=document.createElement("div");
+  item.className="note-item";
+
+  const heading=document.createElement("h3");
+  heading.textContent=`${formatDate(r.date)} ${r.time||""}`;
+  const cast=document.createElement("p");
+  cast.textContent=roleKeys.map(k=>`${k} ${r[k]||"-"}`).join(" / ");
+  const stars=document.createElement("p");
+  stars.className="note-stars";
+  stars.textContent="★".repeat(score)+"☆".repeat(5-score);
+  item.append(heading,cast,stars);
+
+  if(note?.scene){
+   const scene=document.createElement("p");
+   scene.innerHTML="<strong>기억하고 싶은 장면</strong><br>";
+   scene.append(document.createTextNode(note.scene));
+   item.appendChild(scene);
+  }
+  if(note?.memo){
+   const memo=document.createElement("p");
+   memo.innerHTML="<strong>오늘의 감상</strong><br>";
+   memo.append(document.createTextNode(note.memo));
+   item.appendChild(memo);
+  }
+
+  const del=document.createElement("button");
+  del.className="secondary";
+  del.textContent="기록 삭제";
+  del.onclick=()=>deleteNote(key);
+  item.appendChild(del);
+  list.appendChild(item);
+ });
+}
+function deleteNote(key){
+ if(!confirm("이 관극 기록과 별점을 삭제할까요?"))return;
+ notes=notes.filter(n=>n.recordKey!==key);
+ delete ratings[key];
+ localStorage.setItem("llb_notes",JSON.stringify(notes));
+ saveRatings();
+ renderNotes();
+}
+
+/* 기록 저장 및 불러오기 */
+function exportData(){
+ const payload={version:1,records,notes,ratings};
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="legend-of-little-basketball-records.json";
+ a.click();
+ URL.revokeObjectURL(url);
+}
+function importData(event){
+ const file=event.target.files[0];
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const data=JSON.parse(reader.result);
+   if(data&&Array.isArray(data.records)){
+    records=data.records;
+    notes=Array.isArray(data.notes)?data.notes:[];
+    ratings=data.ratings&&typeof data.ratings==="object"?data.ratings:{};
+   }else if(Array.isArray(data)){
+    records=data;notes=[];ratings={};
+   }else throw new Error();
+   records.forEach(r=>{if(!Array.isArray(r.seatSelections))r.seatSelections=[];});
+   localStorage.setItem("llb_notes",JSON.stringify(notes));
+   saveRatings();
+   save();
+   setupFilter();
+   render();
+   alert("공연 기록과 감상 기록을 불러왔습니다.");
+  }catch(e){alert("올바른 기록 파일이 아닙니다.");}
+  event.target.value="";
+ };
+ reader.readAsText(file);
+}
+
+/* 시작 */
+localStorage.setItem("llb_records",JSON.stringify(records));
+localStorage.setItem("llb_notes",JSON.stringify(notes));
+localStorage.setItem("llb_ratings",JSON.stringify(ratings));
+setupFilter();
+render();
+</script>
+</body>
+</html>
