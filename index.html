@@ -76,11 +76,13 @@ td{font-size:13px;overflow-wrap:anywhere}
 .seat-legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:13px;font-size:12px}
 .legend-square{display:inline-block;width:15px;height:15px;border:1px solid #B9D6E5;border-radius:3px;vertical-align:middle;margin-right:4px;background:	#F8FAFC}
 .legend-square.selected{background:#315B7D}
-.floor-tabs{display:flex;justify-content:center;gap:7px;margin:12px 0}
-.floor-tab{background:#C5E5F3;color:#315B7D;padding:8px 18px;font-size:12px}
-.floor-tab.active{background:#315B7D;color:white}
-.floor-panel{display:none}
-.floor-panel.active{display:block}
+.floor-tabs{display:none}
+.floor-panel{display:block}
+.floor-panel + .floor-panel{
+  border-top:1px solid #C5DCE9;
+  margin-top:18px;
+  padding-top:18px;
+}
 .seat-map{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:max-content;padding:6px 10px}
 .seat-row{
   display:grid;
@@ -644,11 +646,6 @@ function seatDescription(id){
 }function renderSeatMap(){
  makeSeatRows(1,floor1Rows,"floor1Seats");
  makeSeatRows(2,floor2Rows,"floor2Seats");
-}function showFloor(floor){
- document.getElementById("floor1Panel").classList.toggle("active",floor===1);
- document.getElementById("floor2Panel").classList.toggle("active",floor===2);
- document.getElementById("floor1Tab").classList.toggle("active",floor===1);
- document.getElementById("floor2Tab").classList.toggle("active",floor===2);
 }function openSeatMap(index){
  currentRecordIndex=index;
  temporarySeats=[...(records[index].seatSelections||[])];
@@ -656,7 +653,6 @@ function seatDescription(id){
  document.getElementById("seatPerformance").textContent=
   `${formatDate(r.date)} ${r.time||""}${r.isEvent?" · 10주년 콘서트":""}`;
  document.getElementById("seatModal").classList.add("open");
- showFloor(1);
  renderSeatMap();
  updateSelectedSeatText();
 }function toggleSeat(id){
@@ -707,10 +703,6 @@ function renderSeatRecords(){
  stage.textContent="STAGE";
  target.appendChild(stage);
  [1,2].forEach(floor=>{
-  const heading=document.createElement("div");
-  heading.className="mini-floor-title";
-  heading.textContent=`${floor}층`;
-  target.appendChild(heading);
   const mapScroll=document.createElement("div");
   mapScroll.className="mini-map-scroll";
   const map=document.createElement("div");
