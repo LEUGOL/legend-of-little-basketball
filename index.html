@@ -58,7 +58,6 @@ td{font-size:13px;overflow-wrap:anywhere}
 .mini-stage{margin:8px auto 12px;padding:5px;max-width:260px;text-align:center;color:white;background:#315B7D;border-radius:4px;font-size:10px;letter-spacing:3px}
 .mini-map-scroll,.seat-map-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .mini-seat-map{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:max-content;padding:5px}
-.mini-floor-title{text-align:center;font-size:10px;color:#66849A;margin:8px 0 4px}
 .mini-seat-row{display:flex;align-items:center;justify-content:center;gap:2px;min-height:14px;margin:2px 0}
 .mini-row-label{width:12px;flex-shrink:0;text-align:center;color:#66849A;font-size:8px}
 .mini-seat{width:11px;height:13px;min-width:11px;padding:0;margin:0;border:1px solid #B9D6E5;border-radius:2px;background:	#F8FAFC;color:#315B7D;font-size:8px;line-height:11px;flex-shrink:0}
@@ -282,10 +281,6 @@ td{font-size:13px;overflow-wrap:anywhere}
   <div class="seat-legend">
    <span><span class="legend-square"></span>선택 가능</span>
    <span><span class="legend-square selected"></span>내 좌석</span>
-  </div>
-  <div class="floor-tabs">
-   <button class="floor-tab active" id="floor1Tab" onclick="showFloor(1)">1층</button>
-   <button class="floor-tab" id="floor2Tab" onclick="showFloor(2)">2층</button>
   </div>
   <div class="floor-panel active" id="floor1Panel">
    <div class="seat-map-scroll"><div class="seat-map" id="floor1Seats"></div></div>
