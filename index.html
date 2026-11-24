@@ -199,7 +199,17 @@ td{font-size:13px;overflow-wrap:anywhere}
 }#actorFilter option{
   background:#F8FAFC;
   color:#315B7D;
-}</style>
+}
+.seat-row.o-row .left-block{
+  transform:translateX(72px);
+}
+
+@media(max-width:600px){
+  .seat-row.o-row .left-block{
+    transform:translateX(42px);
+  }
+}
+</style>
 </head>
 <body>
 <div class="container">
@@ -590,11 +600,16 @@ function seatDescription(id){
 }function makeSeatRows(floor,rows,targetId){
  const target=document.getElementById(targetId);
  target.innerHTML="";
- rows.forEach(item=>{
+rows.forEach(item=>{
   const row=document.createElement("div");
   row.className="seat-row";
+
+  if(item.row==="O"){
+    row.classList.add("o-row");
+  }
+
   if(item.offset){
-   row.style.transform=`translateX(${item.offset}px)`;
+    row.style.transform=`translateX(${item.offset}px)`;
   }
   const label=document.createElement("span");
   label.className="row-label";
