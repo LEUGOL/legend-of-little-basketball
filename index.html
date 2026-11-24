@@ -646,120 +646,301 @@ function seatDescription(id){
  const gap=document.createElement("span");
  gap.className="seat-gap";
  row.appendChild(gap);
-}function makeSeatRows(floor,rows,targetId){
+}
+function makeSeatRows(floor,rows,targetId){
  const target=document.getElementById(targetId);
  target.innerHTML="";
-rows.forEach(item=>{
- const row=document.createElement("div");
- row.className="mini-seat-row";
 
- if(item.offset){
-  row.style.transform=`translateX(${item.offset}px)`;
+ rows.forEach(item=>{
+  const row=document.createElement("div");
+  row.className="seat-row";
+
+  if(floor===1 && item.row==="O"){
+   row.classList.add("o-row");
+  }
+
+  if(item.offset){
+   row.style.transform=`translateX(${item.offset}px)`;
+  }
+
+  const label=document.createElement("span");
+  label.className="row-label";
+  label.textContent=item.row;
+  row.appendChild(label);
+
+  let number=1;
+
+  if(floor===1){
+   const blockNames=["left-block","center-block","right-block"];
+
+   item.blocks.forEach((count,blockIndex)=>{
+    if(blockIndex>0){
+     addSeatGap(row);
+    }
+
+    const block=document.createElement("div");
+    block.className="seat-block "+blockNames[blockIndex];
+
+    for(let i=0;i<count;i++){
+     block.appendChild(makeSeat(floor,item.row,number));
+     number++;
+    }
+
+    row.appendChild(block);
+   });
+  }else{
+   const left=document.createElement("div");
+   left.className="seat-block left-block";
+   row.appendChild(left);
+
+   addSeatGap(row);
+
+   const center=document.createElement("div");
+   center.className="seat-block center-block";
+
+   item.blocks.forEach(count=>{
+    for(let i=0;i<count;i++){
+     center.appendChild(makeSeat(floor,item.row,number));
+     number++;
+    }
+   });
+
+   row.appendChild(center);
+
+   addSeatGap(row);
+
+   const right=document.createElement("div");
+   right.className="seat-block right-block";
+   row.appendChild(right);
+  }
+
+  target.appendChild(row);
+ });
+}
+
+/* 좌석 선택 기능 */
+function updateSelectedSeatText(){
+ const target=document.getElementById("selectedSeatText");
+
+ if(!temporarySeats.length){
+  target.textContent="선택한 좌석이 없습니다.";
+  return;
  }
 
- if(floor===1 && item.row==="O"){
-  row.classList.add("mini-o-row");
+ target.textContent=temporarySeats
+  .map(seatDescription)
+  .join(" / ");
+}
+
+function toggleSeat(id){
+ if(temporarySeats.includes(id)){
+  temporarySeats=temporarySeats.filter(seat=>seat!==id);
+ }else{
+  temporarySeats.push(id);
  }
 
- const label=document.createElement("span");
- label.className="mini-row-label";
- label.textContent=item.row;
- row.appendChild(label);
+ makeSeatRows(1,floor1Rows,"floor1Seats");
+ makeSeatRows(2,floor2Rows,"floor2Seats");
+ updateSelectedSeatText();
+}
 
- let number=1;
+function openSeatMap(index){
+ currentRecordIndex=index;
+ temporarySeats=[...(records[index].seatSelections||[])];
 
- const blockNames=["mini-left-block","mini-center-block","mini-right-block"];
+ const r=records[index];
+ document.getElementById("seatPerformance").textContent=
+  `${formatDate(r.date)} ${r.time||""}`;
 
- if(floor===1){
-  item.blocks.forEach((count,blockIndex)=>{
-   if(blockIndex>0){
+ makeSeatRows(1,floor1Rows,"floor1Seats");
+ makeSeatRows(2,floor2Rows,"floor2Seats");
+ updateSelectedSeatText();
+
+ document.getElementById("seatModal").classList.add("open");
+}
+
+function saveSeatSelection(){
+ if(currentRecordIndex===null)return;
+
+ records[currentRecordIndex].seatSelections=[...temporarySeats];
+ save();
+ renderSeatRecords();
+
+ document.getElementById("seatModal").classList.remove("open");
+ currentRecordIndex=null;
+}
+
+function closeSeatMap(){
+ saveSeatSelection();
+}
+
+function clearSeats(){
+ temporarySeats=[];
+ makeSeatRows(1,floor1Rows,"floor1Seats");
+ makeSeatRows(2,floor2Rows,"floor2Seats");
+ updateSelectedSeatText();
+}
+
+/* MY SEATS 미니 좌석표 */
+function renderSeatRecords(){
+ const target=document.getElementById("seatRecordList");
+ target.innerHTML="";
+
+ const seatCounts={};
+
+ records.forEach(r=>{
+  (r.seatSelections||[]).forEach(id=>{
+   seatCounts[id]=(seatCounts[id]||0)+1;
+  });
+ });
+
+ const selectedRecords=records.filter(
+  r=>(r.seatSelections||[]).length>0
+ );
+
+ if(!selectedRecords.length){
+  const empty=document.createElement("div");
+  empty.className="no-seats";
+  empty.textContent="아직 선택한 좌석이 없습니다. 공연 일정에서 좌석을 선택해 보세요.";
+  target.appendChild(empty);
+ }
+
+ const stage=document.createElement("div");
+ stage.className="mini-stage";
+ stage.textContent="STAGE";
+ target.appendChild(stage);
+
+ [1,2].forEach(floor=>{
+  const mapScroll=document.createElement("div");
+  mapScroll.className="mini-map-scroll";
+
+  const map=document.createElement("div");
+  map.className="mini-seat-map";
+
+  const rows=floor===1?floor1Rows:floor2Rows;
+
+  rows.forEach(item=>{
+   const row=document.createElement("div");
+   row.className="mini-seat-row";
+
+   if(item.offset){
+    row.style.transform=`translateX(${item.offset}px)`;
+   }
+
+   if(floor===1&&item.row==="O"){
+    row.classList.add("mini-o-row");
+   }
+
+   const label=document.createElement("span");
+   label.className="mini-row-label";
+   label.textContent=item.row;
+   row.appendChild(label);
+
+   let number=1;
+   const blockNames=[
+    "mini-left-block",
+    "mini-center-block",
+    "mini-right-block"
+   ];
+
+   if(floor===1){
+    item.blocks.forEach((count,blockIndex)=>{
+     if(blockIndex>0){
+      const gap=document.createElement("span");
+      gap.className="mini-seat-gap";
+      row.appendChild(gap);
+     }
+
+     const block=document.createElement("div");
+     block.className="mini-seat-block "+blockNames[blockIndex];
+
+     for(let i=0;i<count;i++){
+      const id=seatId(floor,item.row,number);
+      const countHere=seatCounts[id]||0;
+
+      const seat=document.createElement("div");
+      seat.className="mini-seat"+(countHere?" selected":"");
+      seat.textContent=countHere?`✓${countHere}`:"";
+      seat.title=seatDescription(id)+(countHere?` · ${countHere}회`:"");
+
+      block.appendChild(seat);
+      number++;
+     }
+
+     row.appendChild(block);
+    });
+   }else{
+    const left=document.createElement("div");
+    left.className="mini-seat-block mini-left-block";
+    row.appendChild(left);
+
     const gap=document.createElement("span");
     gap.className="mini-seat-gap";
     row.appendChild(gap);
+
+    const center=document.createElement("div");
+    center.className="mini-seat-block mini-center-block";
+
+    item.blocks.forEach(count=>{
+     for(let i=0;i<count;i++){
+      const id=seatId(floor,item.row,number);
+      const countHere=seatCounts[id]||0;
+
+      const seat=document.createElement("div");
+      seat.className="mini-seat"+(countHere?" selected":"");
+      seat.textContent=countHere?`✓${countHere}`:"";
+      seat.title=seatDescription(id)+(countHere?` · ${countHere}회`:"");
+
+      center.appendChild(seat);
+      number++;
+     }
+    });
+
+    row.appendChild(center);
+
+    const rightGap=document.createElement("span");
+    rightGap.className="mini-seat-gap";
+    row.appendChild(rightGap);
+
+    const right=document.createElement("div");
+    right.className="mini-seat-block mini-right-block";
+    row.appendChild(right);
    }
 
-   const block=document.createElement("div");
-   block.className="mini-seat-block "+blockNames[blockIndex];
-
-   for(let i=0;i<count;i++){
-    const id=seatId(floor,item.row,number);
-    const countHere=seatCounts[id]||0;
-
-    const seat=document.createElement("div");
-    seat.className="mini-seat"+(countHere?" selected":"");
-    seat.textContent=countHere?`✓${countHere}`:"";
-    seat.title=seatDescription(id)+(countHere?` · ${countHere}회`:"");
-
-    block.appendChild(seat);
-    number++;
-   }
-
-   row.appendChild(block);
-  });
- }else{
-  const left=document.createElement("div");
-  left.className="mini-seat-block mini-left-block";
-  row.appendChild(left);
-
-  const gap=document.createElement("span");
-  gap.className="mini-seat-gap";
-  row.appendChild(gap);
-
-  const center=document.createElement("div");
-  center.className="mini-seat-block mini-center-block";
-
-  item.blocks.forEach(count=>{
-   for(let i=0;i<count;i++){
-    const id=seatId(floor,item.row,number);
-    const countHere=seatCounts[id]||0;
-
-    const seat=document.createElement("div");
-    seat.className="mini-seat"+(countHere?" selected":"");
-    seat.textContent=countHere?`✓${countHere}`:"";
-    seat.title=seatDescription(id)+(countHere?` · ${countHere}회`:"");
-
-    center.appendChild(seat);
-    number++;
-   }
+   map.appendChild(row);
   });
 
-  row.appendChild(center);
-
-  const rightGap=document.createElement("span");
-  rightGap.className="mini-seat-gap";
-  row.appendChild(rightGap);
-
-  const right=document.createElement("div");
-  right.className="mini-seat-block mini-right-block";
-  row.appendChild(right);
- }
-
- map.appendChild(row);
-});
-  });
   mapScroll.appendChild(map);
   target.appendChild(mapScroll);
  });
+
  const legend=document.createElement("div");
  legend.className="mini-legend";
  legend.innerHTML='<span class="mini-legend-mark"></span>체크 표시 옆 숫자는 해당 좌석에 앉은 횟수';
  target.appendChild(legend);
+
  selectedRecords.forEach(r=>{
   const item=document.createElement("div");
   item.className="seat-record";
+
   const date=document.createElement("div");
   date.className="seat-record-date";
   date.textContent=`${formatDate(r.date)} ${r.time||""}`;
+
   const cast=document.createElement("div");
   cast.className="seat-record-cast";
   cast.textContent=roleKeys.map(k=>`${k} ${r[k]||"-"}`).join(" · ");
+
   const seats=document.createElement("div");
   seats.className="seat-record-cast";
   seats.textContent=r.seatSelections.map(seatDescription).join(" / ");
+
   item.append(date,cast,seats);
   target.appendChild(item);
  });
-}/* 별점 및 감상 기록 */
+}
+
+/* 별점 및 감상 기록 */
 let noteRating=0;
 function selectNoteRating(score){
  noteRating=score;
